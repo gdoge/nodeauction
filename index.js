@@ -8,7 +8,7 @@ const port = process.env.PORT || 3001;
 app.use(express.static('public'));
 
 http.listen(port, function(){
-  console.log(`webserver listening on *:${port}`);
+  console.log("webserver listening on *:${port}");
 });
 
 const auctions = [];
@@ -36,8 +36,10 @@ const items = [
   }
 ]
 
-const maxMins = 10;
-const minMins = 5;
+const maxMins = 60*60;
+const minMins = 3*60;
+
+const minToRestart = 5;
 
 //initialize all auctions
 for(var i = 0; i < 4 ; i++){
@@ -58,23 +60,59 @@ for(var i = 0; i < 4 ; i++){
 
 }
 
-
 var resetAuction = function(index){
-  var d = new Date();
-  var seconds = Math.floor((Math.random() * (maxMins-minMins)) + minMins);
-  d.setSeconds(d.getSeconds() + seconds);
-  auctions[index] = {
-    item: items[index],
-    endDate: d
-  }
-  setTimeout(function(){
-    resetAuction(index);
-  }, 1000*seconds);
 
-  io.emit('auction_updated', {
+  auctions[index].ended = true;
+
+  if(auctions[index].bids){
+    var temp = auctions[index].bids.reduce((latest, current) => {
+      var existent = latest.find(item => item.value == current.value);
+      if(existent){
+        existent.count++;
+        existent.users.push(current.user);
+      }
+      else{
+        latest.push({
+          value: current.value,
+          users: [current.user],
+          count: 1
+        });
+      }
+      return latest;
+    }, []).filter(item => item.count == 1).sort((a, b) => a.value - b.value )[0];
+  }
+
+  if(temp){
+    auctions[index].winner = temp.users[0];
+    auctions[index].value = temp.value
+  }
+
+  io.emit('auction_ended', {
     number: index,
-    auction: auctions[index]
+    winner: temp ? temp.users[0] : null,
+    value: temp ? temp.value : null
   });
+
+
+
+  setTimeout(function(){
+    var d = new Date();
+    var seconds = Math.floor((Math.random() * (maxMins-minMins)) + minMins);
+    d.setSeconds(d.getSeconds() + seconds);
+    auctions[index] = {
+      item: items[index],
+      endDate: d
+    }
+    setTimeout(function(){
+      resetAuction(index);
+    }, 1000*seconds);
+
+    io.emit('auction_updated', {
+      number: index,
+      auction: auctions[index]
+    });
+  }, 1000*60*minToRestart)
+
 
 }
 
@@ -99,17 +137,35 @@ var generateToken = function (){
     var tokenCharacter = tokenString[Math.floor(Math.random()*tokenString.length)];
     token = token + tokenCharacter;
   }
+  console.log(token)
+
   return token;
 };
 
 io.sockets.on('connection', function (socket) {
-  //We do not keep track of users or connections...
+  //We do not keep track of users or connections..
+  // console.log("connection")
   socket.on('signin', function(data){
+    console.log("signing user in on the backend")
+
+    var token = generateToken();
+    var name = data.name;
+    // console.log(data.name)
+    socket.emit ("signedIn", {token: token, name: name})
+
 
   });
 
   socket.on('get_auctions', function(){
     socket.emit('auction_list', auctions);
+  });
+
+  socket.on('bid', function(data){
+    auctions[data.number].bids = auctions[data.number].bids || [];
+    auctions[data.number].bids.push({
+      user: data.user,
+      value: data.value
+    })
   });
 
 });

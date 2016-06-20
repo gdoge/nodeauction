@@ -12,6 +12,7 @@
     .controller('mainCtrl', function($scope, $interval){
 
       var main = this;
+
       //GET AUCTIONS
       socket.emit('get_auctions');
       socket.on('auction_list', function(auctions){
@@ -28,7 +29,15 @@
 
       })
 
+      socket.on('auction_ended', function(data){
+        main.auctions[data.number].winner = data.winner;
+        main.auctions[data.number].value = data.value;
+        main.auctions[data.number].ended = true;
+        //SHOW POPUP
+      })
+
       socket.on('auction_updated', function(data){
+        if(!main.auctions || main.auctions.length <= data.number) return;
         clearInterval(main.auctions[data.number].itv);
         main.auctions[data.number] = data.auction;
         main.auctions[data.number].timeLeft = main.timeLeft(main.auctions[data.number].endDate);
@@ -42,7 +51,7 @@
         var time = (new Date(date)).getTime();
         var currentTime = (new Date()).getTime();
         var diff = time-currentTime;
-        if(diff < 0) diff = 0;
+        //if(diff < 0) diff = 0;
         var seconds = Math.floor(diff/1000);
         var minutes = Math.floor(seconds/60);
         var hours = Math.floor(minutes/60);
@@ -51,14 +60,62 @@
           return hours+' h  '+(minutes - hours*60)+" m  "+(seconds - minutes*60)+" s";
         }
         else if(minutes > 0){
-          return (minutes - hours*60)+" m  "+(seconds - minutes*60)+" s";
+          return minutes+" m  "+(seconds - minutes*60)+" s";
         }
         else if(seconds > 0){
           return seconds+" s";
         }
-        else return "Finished"
+        else{
+          var restartTime = 5*60 + seconds;
+          var restartMinutes = Math.floor(restartTime/60);
+          if(restartMinutes > 1){
+            return "Restarting in "+restartMinutes+" m  "+(restartTime - restartMinutes*60)+" s";
+          }
+          else{
+            return "Restarting in "+restartTime+" s";
+          }
+        }
       }
 
+      //LOGIN
+      if(localStorage.getItem('token') === null){
+        console.log("first user login");
+        login();
+      }
+
+      function login(){
+        var person = prompt("Please enter your name", "");
+        if (person != null) {
+            socket.emit('signin',{name: person});
+        }
+        console.log(person);
+        socket.on("signedIn", function(data){
+          var userName = data.name;
+          console.log(userName + " is the user name")
+          var userToken = data.token;
+          localStorage.setItem('name', userName);
+          localStorage.setItem('token', userToken);
+        })
+      }
+
+      //BID
+      main.bid = function(auction){
+        var val = auction.bidValue;
+        socket.emit('bid', {
+          number: main.auctions.indexOf(auction),
+          value: val,
+          user: {
+            name: localStorage.getItem('name'),
+            token: localStorage.getItem('token')
+          }
+        });
+        auction.bidValue = null;
+      }
+
+      main.getWinnerName = function(winner){
+        if(winner.token == localStorage.getItem('token')) return "you";
+        else return winner.name;
+      }
 
 
     })
@@ -181,9 +238,17 @@
         <span ng-bind="auction.timeLeft"></span>
         <br />
         <span class="hint" ng-bind="auction.item.description"></span>
-        <form>
-          <span class="form"><input type="number"/>€</span>
+        <form ng-submit="main.bid(auction)" ng-if="!auction.ended">
+          <span class="form"><input type="number" ng-model="auction.bidValue"/>€</span>
         </form>
+        <span ng-if="auction.winner">
+          <br /><br />
+          Winned by <b>{{main.getWinnerName(auction.winner)}}</b> for <b>{{auction.value}}</b> €
+        </span>
+        <span ng-if="!auction.winner && auction.ended">
+          <br /><br />
+          There's no winner
+        </span>
       </div>
 
     </div>
