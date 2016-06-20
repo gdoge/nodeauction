@@ -22,17 +22,17 @@ const items = [
   {
     name: '1.000.000 $',
     picture: 'https://consumermediallc.files.wordpress.com/2012/06/heapocash.jpg',
-    descriotion: 'Wow, that sure is a lot of money....'
+    description: 'Wow, that sure is a lot of money....'
   },
   {
     name: 'Funny & cute dead squirrel',
     picture: 'https://i.ytimg.com/vi/ICE9Qe8HrqE/hqdefault.jpg',
-    descriotion: 'Kids love it, adults love it, you will love it too!!'
+    description: 'Kids love it, adults love it, you will love it too!!'
   },
   {
     name: 'Slave',
     picture: 'http://cdn.modernghana.com/images/content/slavesscar65.jpg',
-    descriotion: 'We all need a helping hand sometimes!'
+    description: 'We all need a helping hand sometimes!'
   }
 ]
 
