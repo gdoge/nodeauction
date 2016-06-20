@@ -3,7 +3,7 @@ const express = require('express');
 const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 
 app.use(express.static('public'));
 
@@ -59,6 +59,22 @@ setInterval(function() {
   }
 }, 1000);
 
+var generateToken = function (){
+
+var tokenString =["a","b","c","d","e","f","g","h","i","j","k","l","m","n"]
+var token = "";
+for(var i = 0; i < 10; i++){
+  var tokenCharacter = tokenString[Math.floor(Math.random()*tokenString.length)];
+  token = token + tokenCharacter;
+}
+return token;
+
+};
+
+
+
+
+
 
 io.sockets.on('connection', function (socket) {
   socket.on('reset', function (data) {
@@ -68,11 +84,11 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('enter_number', function(message){
 
-
+    console.log(message);
 
    console.log('got message ${message}, broadcasting to all');
 
-                        if(req.body['g-recaptcha-response'] === undefined || req.body['g-recaptcha-response'] === '' || req.body['g-recaptcha-response'] === null) {
+                        if(message.body['g-recaptcha-response'] === undefined || message.body['g-recaptcha-response'] === '' || message.body['g-recaptcha-response'] === null) {
                           //  return res.json({"responseCode" : 1,"responseDesc" : "Please select captcha"});
                           }
                           // Put your secret key here.
