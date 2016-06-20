@@ -36,14 +36,46 @@ const items = [
   }
 ]
 
+const maxMins = 10;
+const minMins = 5;
+
 //initialize all auctions
 for(var i = 0; i < 4 ; i++){
   var d = new Date();
-  d.setMinutes(d.getMinutes() + 5);
+  var seconds = Math.floor((Math.random() * (maxMins-minMins)) + minMins);
+  d.setSeconds(d.getSeconds() + seconds);
   auctions.push({
     item: items[i],
     endDate: d
   });
+  var timeout = 1000*seconds;
+  (() => {
+    let index = i;
+    setTimeout(function(){
+      resetAuction(index);
+    }, timeout);
+  })();
+
+}
+
+
+var resetAuction = function(index){
+  var d = new Date();
+  var seconds = Math.floor((Math.random() * (maxMins-minMins)) + minMins);
+  d.setSeconds(d.getSeconds() + seconds);
+  auctions[index] = {
+    item: items[index],
+    endDate: d
+  }
+  setTimeout(function(){
+    resetAuction(index);
+  }, 1000*seconds);
+
+  io.emit('auction_updated', {
+    number: index,
+    auction: auctions[index]
+  });
+
 }
 
 // io.on('connection', function(socket){
@@ -77,8 +109,8 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('get_auctions', function(){
-
-  })
+    socket.emit('auction_list', auctions);
+  });
 
 });
 
