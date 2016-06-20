@@ -1,85 +1,141 @@
 <!doctype html>
 <html>
-<head>
-<title>Auction</title>
-  <script src="https://code.jquery.com/jquery-2.2.3.min.js"></script>
-  <script src="socket.io/socket.io.js"></script>
-  <script>
-    var socket = io();
-
-    socket.on('winner', function(data){
-      console.log(data);
-      $('#winner').html(data.name);
-      $('#bid').html(data.number);
-    })
-
-    socket.on('timer', function (data) {
-        $('#countdown').html(data.countdown);
-    });
-
-    function reset() {
-      console.log("reset");
-        socket.emit('reset');
-    };
-
-    function submit(event){
-      event.preventDefault();
-      console.log("submit number");
-
-      if($('#number').val()){
-        socket.emit('enter_number',{number: $('#number').val(), name:$('#name').val()});
-      }
-      $('#number').val('');
-      $('#name').val('');
-      console.log("no value");
-
-      return false;
-    };
+  <head>
+    <title>Auction</title>
 
 
-    window.onload = function(){
-      document.getElementById("myForm").addEventListener("submit", submit);
-    }
+    <script src="https://code.jquery.com/jquery-2.2.3.min.js"></script>
+    <script src="socket.io/socket.io.js"></script>
+    <script>
 
-    $(document).ready(function() {
-      $('#myForm').submit(function() {
-        $(this).ajaxSubmit({
-          error: function(xhr) {
-            status('Error: ' + xhr.status);
-          },
-         success: function(response) {
-          console.log(response);
-         }
-        });
-        //Very important line, it disable the page refresh.
-        return false;
+var socket = io();
+
+socket.on('winner', function(data){
+
+console.log(data);
+$('#winner').html(data.name);
+$('#bid').html(data.number);
+
+
+})
+
+
+socket.on('timer', function (data) {
+    $('#countdown').html(data.countdown);
+});
+
+function reset() {
+  console.log("reset");
+    socket.emit('reset');
+};
+
+
+function submit(event){
+
+  event.preventDefault();
+  console.log("submit number");
+
+if($('#number').val()){
+  socket.emit('enter_number',{number: $('#number').val(), name:$('#name').val()});
+}
+  $('#number').val('');
+  $('#name').val('');
+  console.log("no value");
+
+  return false;
+};
+
+
+window.onload = function(){
+  document.getElementById("myForm").addEventListener("submit", submit);
+
+}
+
+$(document).ready(function() {
+    $('#myForm').submit(function() {
+      $(this).ajaxSubmit({
+        error: function(xhr) {
+          status('Error: ' + xhr.status);
+        },
+       success: function(response) {
+        console.log(response);
+       }
       });
+      //Very important line, it disable the page refresh.
+      return false;
     });
+  });
 
 
 
+window.onload = function(){
 
-  </script>
-  <script src='https://www.google.com/recaptcha/api.js'></script>
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-  <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery.form/3.51/jquery.form.min.js"></script>
-</head>
-<body>
+    if(localStorage.getItem('token') === null){
+      console.log("first user login");
 
-  <div id="countdown"></div>
+      login();
+    }
+  }
 
-  <form id="myForm">
-    <input type="number" id="number" autocomplete="off" min="0.01" step="0.01"/>
-    <input type="text" id="name" />
-     <button id="send" type="submit">Send</button>
-     <div class="g-recaptcha" data-sitekey="6LcQ2B4TAAAAAJdUZMlCH2jYkZVXWjybHmr4d8Tt"></div>
-  </form>
-  <button id="reset" onclick="reset()">Reset!</button>
+function login(){
+  // console.log("person prompt");
 
-  </br>
+  var person = prompt("Please enter your name", "");
 
-  <h4>Winner of the last Autcion: <span id="winner"></span> with the bid: <span id="bid"></span></h4>
+  if (person != null) {
+      // document.getElementById("demo").innerHTML =
+      // "Hello " + person + "! You are successfully logged in.";
+      socket.emit('signin',{name: person});
+  }
+
+    console.log(person);
+    socket.on("signedIn", function(data){
+      var userName = data.name;
+      console.log(userName + " is the user name")
+      var userToken = data.token;
+      localStorage.setItem('name', userName);
+      localStorage.setItem('token', userToken);
+
+    })
+    // console.log(localStorage.getItem('token'))
 
 
-</body>
+
+}
+
+//login();
+    </script>
+<script src='https://www.google.com/recaptcha/api.js'></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+ <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery.form/3.51/jquery.form.min.js"></script>
+
+  </head>
+  <body>
+<scrpit>
+
+</script>
+
+<p id="demo"></p>
+
+
+<div id="countdown">
+
+
+
+</div>
+
+<form id="myForm">
+<input type="number" id="number" autocomplete="off" min="0.01" step="0.01"/>
+<input type="text" id="name" />
+ <button id="send" type="submit">Send</button>
+ <div class="g-recaptcha" data-sitekey="6LcQ2B4TAAAAAJdUZMlCH2jYkZVXWjybHmr4d8Tt"></div>
+</form>
+<button id="reset" onclick="reset()">Reset!</button>
+
+</br>
+
+<h4>Winner of the last Autcion: <span id="winner"></span> with the bid: <span id="bid"></span></h4>
+
+
+  </body>
 </html>

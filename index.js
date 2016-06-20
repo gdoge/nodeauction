@@ -8,7 +8,7 @@ const port = process.env.PORT || 3001;
 app.use(express.static('public'));
 
 http.listen(port, function(){
-  console.log(`webserver listening on *:${port}`);
+  console.log("webserver listening on *:${port}");
 });
 
 const auctions = [];
@@ -67,12 +67,22 @@ var generateToken = function (){
     var tokenCharacter = tokenString[Math.floor(Math.random()*tokenString.length)];
     token = token + tokenCharacter;
   }
+  console.log(token)
+
   return token;
 };
 
 io.sockets.on('connection', function (socket) {
-  //We do not keep track of users or connections...
+  //We do not keep track of users or connections..
+  // console.log("connection")
   socket.on('signin', function(data){
+    console.log("signing user in on the backend")
+
+    var token = generateToken();
+    var name = data.name;
+    // console.log(data.name)
+    socket.emit ("signedIn", {token: token, name: name})
+
 
   });
 
