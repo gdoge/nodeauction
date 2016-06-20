@@ -59,11 +59,26 @@ for(var i = 0; i < 4 ; i++){
 //   });
 // });
 
+//TOKEN GENERATOR
+var generateToken = function (){
+  var tokenString =["a","b","c","d","e","f","g","h","i","j","k","l","m","n"]
+  var token = "";
+  for(var i = 0; i < 10; i++){
+    var tokenCharacter = tokenString[Math.floor(Math.random()*tokenString.length)];
+    token = token + tokenCharacter;
+  }
+  return token;
+};
+
 io.sockets.on('connection', function (socket) {
   //We do not keep track of users or connections...
   socket.on('signin', function(data){
 
   });
+
+  socket.on('get_auctions', function(){
+
+  })
 
 });
 
