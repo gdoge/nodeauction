@@ -31,7 +31,7 @@ const items = [
   },
   {
     name: 'Slave',
-    picture: 'http://cdn.modernghana.com/images/content/slavesscar65.jpg',
+    picture: 'http://chds.hsph.harvard.edu/cms_content/images/upload/stories/Programmers_Pic_Final.jpg',
     description: 'We all need a helping hand sometimes!'
   }
 ]
